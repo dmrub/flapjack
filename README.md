@@ -17,7 +17,7 @@ and add a dependency to your project's `pom.xml` like this
   	<artifactId>flapjack</artifactId>
   	<version>0.0.1-SNAPSHOT</version>
 </dependency>
-``
+```
 
 Dependencies
 -
