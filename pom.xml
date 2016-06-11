@@ -42,7 +42,25 @@
 
 	<build>
     	<finalName>flapjack</finalName>
+	<pluginManagement>
+		<plugins>
+        		<plugin>
+          			<groupId>org.codehaus.mojo</groupId>
+          			<artifactId>license-maven-plugin</artifactId>
+          			<version>1.9</version>
+				<configuration>
+					<outputDirectory>${basedir}</outputDirectory>
+					<thirdPartyFilename>THIRD-PARTY</thirdPartyFilename>
+				</configuration>
+        		</plugin>
+      		</plugins>
+    	</pluginManagement>
         <plugins>
+		<plugin>
+        		<groupId>org.codehaus.mojo</groupId>
+        		<artifactId>license-maven-plugin</artifactId>
+        		<version>1.9</version>
+      		</plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -86,4 +104,13 @@
             </plugin>
         </plugins>
   	</build>
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<version>1.9</version>
+			</plugin>
+		</plugins>
+	</reporting>
 </project>
