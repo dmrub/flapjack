@@ -106,7 +106,7 @@ public abstract class Resource implements IResource
 		};
 		
 		return Response.ok(out)
-					   .type(RDFDataMgr.determineLang(null, contentType, null).getName())
+					   .type(contentType)
 					   .build();
 	}
 	
@@ -140,7 +140,7 @@ public abstract class Resource implements IResource
 		};
 		
 		return Response.ok(out)
-				   	   .type(RDFDataMgr.determineLang(null, contentType, null).getName())
+				   	   .type(contentType)
 				   	   .build();
 	}
 	
