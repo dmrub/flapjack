@@ -1,5 +1,7 @@
-/**
- * 
+/*
+ * This file is part of flapjack. It is subject to the license terms in
+ * the LICENSE file found in the top-level directory of this distribution.
+ * You may not use this file except in compliance with the License.
  */
 package de.dfki.resc28.flapjack.services;
 
@@ -27,28 +29,17 @@ import de.dfki.resc28.flapjack.resources.IResource;
 import de.dfki.resc28.flapjack.resources.IResourceManager;
 import de.dfki.resc28.igraphstore.Constants;
 
-
-
-
-
 /**
  * @author resc01
  *
  */
 public abstract class BaseService 
 {
-	//================================================================================
-    // Constructors
-    //================================================================================
 	public BaseService ()
 	{
 		
 	}
 
-	//================================================================================
-    // HTTP-Request Handlers
-    //================================================================================
-	
 	@GET
 	@Produces({ Constants.CT_TEXT_TURTLE, Constants.CT_APPLICATION_RDFXML, Constants.CT_APPLICATION_XTURTLE, Constants.CT_APPLICATION_JSON, Constants.CT_APPLICATION_LD_JSON })
 	public Response get( @HeaderParam(HttpHeaders.ACCEPT) String acceptType )
@@ -137,36 +128,24 @@ public abstract class BaseService
 		
 	}
 	
-	//================================================================================
-    // Protected Methods
-    //================================================================================
-	
-	protected IResourceManager getResourceManager()
-	{
-		return fResourceManager;
-	}
-	
-	protected IContainer getRootContainer()
-	{
-		return fRootContainer;
-	}
+	protected abstract IResourceManager getResourceManager();
+
+	protected abstract IContainer getRootContainer();
 	
     protected String getCanonicalURL (URI url)
     {
+    	 if(url.toString().endsWith("/")) 
+    	 {
+    		 return url.toString().substring(0, url.toString().length() - 1);	
+   		 }
+
     	return url.toString();
     }
-    
-	//================================================================================
-    // Member variables
-    //================================================================================
+ 
 
 	@Context HttpServletRequest fRequest;
 	@Context protected ServletContext fContext;
 	@Context protected HttpHeaders fRequestHeaders;
 	@Context protected UriInfo fRequestUrl;
-	
-	protected IResourceManager fResourceManager;
-	protected IContainer fRootContainer;
-	
 	protected static String fPublicURI = null;
 }
