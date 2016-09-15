@@ -5,8 +5,17 @@
  */
 package de.dfki.resc28.flapjack.services;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.StringWriter;
 import java.net.URI;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -20,9 +29,26 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.RDFDataMgr;
 
 import de.dfki.resc28.flapjack.resources.IContainer;
 import de.dfki.resc28.flapjack.resources.IResource;
@@ -38,6 +64,50 @@ public abstract class BaseService
 	public BaseService ()
 	{
 		
+	}
+	
+	@GET
+	@Produces( { MediaType.TEXT_HTML, "image/svg+xml" })
+	public Response getHTML()
+	{
+		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
+		
+		if (r == null)
+		{
+			return Response.status(Status.NOT_FOUND).build();
+		}
+
+		try
+		{
+	        String syntax = "RDF/XML";
+	        StringWriter out = new StringWriter();
+	        r.getModel().write(out, syntax);
+	        
+	        List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
+	        urlParameters.add(new BasicNameValuePair("rules", "http://rhizomik.net/html/redefer/rdf2svg/showgraph.jrule"));
+	        urlParameters.add(new BasicNameValuePair("format", "RDF/XML"));
+	        urlParameters.add(new BasicNameValuePair("rdf", out.toString()));
+	        out.close();
+	
+			CloseableHttpClient client = HttpClients.createDefault();
+	        HttpPost httpPost = new HttpPost("http://rhizomik.net/redefer-services/render");
+	        httpPost.setEntity(new UrlEncodedFormEntity(urlParameters));
+	        
+	        HttpResponse response = client.execute(httpPost);
+	        
+	        InputStream in = response.getEntity().getContent();
+	        StringWriter writer = new StringWriter();
+	        IOUtils.copy(in, writer, "UTF-8");
+	        return Response.ok(writer.toString()).type("image/svg+xml").build();
+	        
+//			OutputStream output = new ByteArrayOutputStream();
+//			IOUtils.copy(response.getEntity().getContent(), output);
+//			return Response.ok(output).type(MediaType.APPLICATION_SVG_XML).build();
+		}
+		catch (Exception e)
+		{
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
 	}
 
 	@GET
