@@ -5,15 +5,9 @@
  */
 package de.dfki.resc28.flapjack.services;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.StringWriter;
 import java.net.URI;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,11 +27,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-import javax.xml.transform.Source;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -47,8 +36,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.riot.RDFDataMgr;
 
 import de.dfki.resc28.flapjack.resources.IContainer;
 import de.dfki.resc28.flapjack.resources.IResource;
@@ -99,10 +86,6 @@ public abstract class BaseService
 	        StringWriter writer = new StringWriter();
 	        IOUtils.copy(in, writer, "UTF-8");
 	        return Response.ok(writer.toString()).type("image/svg+xml").build();
-	        
-//			OutputStream output = new ByteArrayOutputStream();
-//			IOUtils.copy(response.getEntity().getContent(), output);
-//			return Response.ok(output).type(MediaType.APPLICATION_SVG_XML).build();
 		}
 		catch (Exception e)
 		{
