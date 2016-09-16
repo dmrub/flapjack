@@ -5,7 +5,9 @@
  */
 package de.dfki.resc28.flapjack.services;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.StringWriter;
 import java.net.URI;
 import java.util.ArrayList;
@@ -21,10 +23,12 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
@@ -36,6 +40,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.RDFDataMgr;
 
 import de.dfki.resc28.flapjack.resources.IContainer;
 import de.dfki.resc28.flapjack.resources.IResource;
@@ -54,8 +60,8 @@ public abstract class BaseService
 	}
 	
 	@GET
-	@Produces( { MediaType.TEXT_HTML, "image/svg+xml" })
-	public Response getHTML()
+	@Produces( "image/svg+xml" )
+	public Response getSVG()
 	{
 		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
 		
@@ -91,6 +97,33 @@ public abstract class BaseService
 		{
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
+	}
+	
+	@GET
+	@Produces(MediaType.TEXT_HTML) 
+	public Response getText()
+	{
+		// TODO: refactor!
+		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
+		
+		if (r == null)
+		{
+			return Response.status(Status.NOT_FOUND).build();
+		}
+		
+		final Model result = r.getModel();
+		
+		StreamingOutput out = new StreamingOutput() 
+		{
+			public void write(OutputStream output) throws IOException, WebApplicationException
+			{
+				RDFDataMgr.write(output, result, RDFDataMgr.determineLang(null, "text/turtle", null)) ;
+			}
+		};
+		
+		return Response.ok(out)
+					   .type(MediaType.TEXT_HTML)
+					   .build();
 	}
 
 	@GET
