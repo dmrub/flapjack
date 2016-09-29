@@ -82,35 +82,35 @@ public abstract class BaseService
 		return r.read(acceptType);
 	}
 	
-	@GET
-	@Produces(MediaType.TEXT_HTML) 
-	public Response getText()
-	{
-		// TODO: refactor!
-		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
-		
-		if (r == null)
-		{
-			return Response.status(Status.NOT_FOUND).build();
-		}
-		
-		final Model result = r.getModel();
-		
-		StreamingOutput out = new StreamingOutput() 
-		{
-			public void write(OutputStream output) throws IOException, WebApplicationException
-			{
-				RDFDataMgr.write(output, result, RDFDataMgr.determineLang(null, "text/turtle", null)) ;
-			}
-		};
-		
-		return Response.ok(out)
-					   .type(MediaType.TEXT_HTML)
-					   .build();
-	}
+//	@GET
+//	@Produces(MediaType.TEXT_HTML) 
+//	public Response getText()
+//	{
+//		// TODO: refactor!
+//		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
+//		
+//		if (r == null)
+//		{
+//			return Response.status(Status.NOT_FOUND).build();
+//		}
+//		
+//		final Model result = r.getModel();
+//		
+//		StreamingOutput out = new StreamingOutput() 
+//		{
+//			public void write(OutputStream output) throws IOException, WebApplicationException
+//			{
+//				RDFDataMgr.write(output, result, RDFDataMgr.determineLang(null, "text/turtle", null)) ;
+//			}
+//		};
+//		
+//		return Response.ok(out)
+//					   .type(MediaType.TEXT_HTML)
+//					   .build();
+//	}
 	
 	@GET
-	@Produces( Constants.CT_IMAGE_SVG_XML )
+	@Produces( {MediaType.TEXT_HTML , Constants.CT_IMAGE_SVG_XML })
 	public Response getSVG()
 	{
 		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
