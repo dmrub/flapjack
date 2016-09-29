@@ -58,6 +58,55 @@ public abstract class BaseService
 	{
 		
 	}
+
+	@GET
+	@Produces({ Constants.CT_APPLICATION_JSON_LD, Constants.CT_APPLICATION_NQUADS, Constants.CT_APPLICATION_NTRIPLES, Constants.CT_APPLICATION_RDF_JSON, Constants.CT_APPLICATION_RDFXML, Constants.CT_APPLICATION_TRIX, Constants.CT_APPLICATION_XTURTLE, Constants.CT_TEXT_N3, Constants.CT_TEXT_TRIG, Constants.CT_TEXT_TURTLE })
+	public Response get( @HeaderParam(HttpHeaders.ACCEPT) String acceptType )
+	{
+		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
+		
+		if (r == null)
+		{
+			return Response.status(Status.NOT_FOUND).build();
+		}
+    	else if (!(r instanceof IResource))
+    	{
+    		return Response.status(Status.BAD_REQUEST).build();
+    	}
+		else if (!(r.getAllowedMethods().contains(HttpMethod.GET)))
+		{
+			return Response.status(Status.METHOD_NOT_ALLOWED).build();
+		}
+
+		return r.read(acceptType);
+	}
+	
+	@GET
+	@Produces(MediaType.TEXT_HTML) 
+	public Response getText()
+	{
+		// TODO: refactor!
+		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
+		
+		if (r == null)
+		{
+			return Response.status(Status.NOT_FOUND).build();
+		}
+		
+		final Model result = r.getModel();
+		
+		StreamingOutput out = new StreamingOutput() 
+		{
+			public void write(OutputStream output) throws IOException, WebApplicationException
+			{
+				RDFDataMgr.write(output, result, RDFDataMgr.determineLang(null, "text/turtle", null)) ;
+			}
+		};
+		
+		return Response.ok(out)
+					   .type(MediaType.TEXT_HTML)
+					   .build();
+	}
 	
 	@GET
 	@Produces( Constants.CT_IMAGE_SVG_XML )
@@ -97,55 +146,6 @@ public abstract class BaseService
 		{
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
-	}
-	
-	@GET
-	@Produces(MediaType.TEXT_HTML) 
-	public Response getText()
-	{
-		// TODO: refactor!
-		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
-		
-		if (r == null)
-		{
-			return Response.status(Status.NOT_FOUND).build();
-		}
-		
-		final Model result = r.getModel();
-		
-		StreamingOutput out = new StreamingOutput() 
-		{
-			public void write(OutputStream output) throws IOException, WebApplicationException
-			{
-				RDFDataMgr.write(output, result, RDFDataMgr.determineLang(null, "text/turtle", null)) ;
-			}
-		};
-		
-		return Response.ok(out)
-					   .type(MediaType.TEXT_HTML)
-					   .build();
-	}
-
-	@GET
-	@Produces({ Constants.CT_APPLICATION_JSON_LD, Constants.CT_APPLICATION_NQUADS, Constants.CT_APPLICATION_NTRIPLES, Constants.CT_APPLICATION_RDF_JSON, Constants.CT_APPLICATION_RDFXML, Constants.CT_APPLICATION_TRIX, Constants.CT_APPLICATION_XTURTLE, Constants.CT_TEXT_N3, Constants.CT_TEXT_TRIG, Constants.CT_TEXT_TURTLE })
-	public Response get( @HeaderParam(HttpHeaders.ACCEPT) String acceptType )
-	{
-		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
-		
-		if (r == null)
-		{
-			return Response.status(Status.NOT_FOUND).build();
-		}
-    	else if (!(r instanceof IResource))
-    	{
-    		return Response.status(Status.BAD_REQUEST).build();
-    	}
-		else if (!(r.getAllowedMethods().contains(HttpMethod.GET)))
-		{
-			return Response.status(Status.METHOD_NOT_ALLOWED).build();
-		}
-
-		return r.read(acceptType);
 	}
 	
 	@DELETE
