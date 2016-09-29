@@ -60,7 +60,7 @@ public abstract class BaseService
 	}
 	
 	@GET
-	@Produces( "image/svg+xml" )
+	@Produces( Constants.CT_IMAGE_SVG_XML )
 	public Response getSVG()
 	{
 		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
@@ -127,7 +127,7 @@ public abstract class BaseService
 	}
 
 	@GET
-	@Produces({ Constants.CT_TEXT_TURTLE, Constants.CT_APPLICATION_RDFXML, Constants.CT_APPLICATION_XTURTLE, Constants.CT_APPLICATION_JSON, Constants.CT_APPLICATION_LD_JSON })
+	@Produces({ Constants.CT_APPLICATION_JSON_LD, Constants.CT_APPLICATION_NQUADS, Constants.CT_APPLICATION_NTRIPLES, Constants.CT_APPLICATION_RDF_JSON, Constants.CT_APPLICATION_RDFXML, Constants.CT_APPLICATION_TRIX, Constants.CT_APPLICATION_XTURTLE, Constants.CT_TEXT_N3, Constants.CT_TEXT_TRIG, Constants.CT_TEXT_TURTLE })
 	public Response get( @HeaderParam(HttpHeaders.ACCEPT) String acceptType )
 	{
 		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
@@ -170,7 +170,7 @@ public abstract class BaseService
 	}
 	
 	@PUT
-	@Consumes({ Constants.CT_TEXT_TURTLE, Constants.CT_APPLICATION_RDFXML, Constants.CT_APPLICATION_XTURTLE, Constants.CT_APPLICATION_JSON, Constants.CT_APPLICATION_LD_JSON })
+	@Consumes({ Constants.CT_APPLICATION_JSON_LD, Constants.CT_APPLICATION_NQUADS, Constants.CT_APPLICATION_NTRIPLES, Constants.CT_APPLICATION_RDF_JSON, Constants.CT_APPLICATION_RDFXML, Constants.CT_APPLICATION_TRIX, Constants.CT_APPLICATION_XTURTLE, Constants.CT_TEXT_N3, Constants.CT_TEXT_TRIG, Constants.CT_TEXT_TURTLE })
 	public Response put( InputStream content, @HeaderParam(HttpHeaders.CONTENT_TYPE) String contentType )
 	{
 		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
@@ -192,7 +192,7 @@ public abstract class BaseService
 	}
 	
 	@POST
-	@Consumes({ Constants.CT_TEXT_TURTLE, Constants.CT_APPLICATION_RDFXML, Constants.CT_APPLICATION_XTURTLE, Constants.CT_APPLICATION_JSON, Constants.CT_APPLICATION_LD_JSON })
+	@Consumes({ Constants.CT_APPLICATION_JSON_LD, Constants.CT_APPLICATION_NQUADS, Constants.CT_APPLICATION_NTRIPLES, Constants.CT_APPLICATION_RDF_JSON, Constants.CT_APPLICATION_RDFXML, Constants.CT_APPLICATION_TRIX, Constants.CT_APPLICATION_XTURTLE, Constants.CT_TEXT_N3, Constants.CT_TEXT_TRIG, Constants.CT_TEXT_TURTLE })
 	public Response post( InputStream content, @HeaderParam(HttpHeaders.CONTENT_TYPE) String contentType )
 	{
 		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
