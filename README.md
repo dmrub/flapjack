@@ -7,7 +7,7 @@ Installation & Usage
 Install fLAPjACk into your local repository by typing
 ```
 mvn clean install
-```
+```xml
 and add a dependency to your project's `pom.xml` like this
 ```
 <dependency>
