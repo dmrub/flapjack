@@ -7,9 +7,9 @@ Installation & Usage
 Install fLAPjACk into your local repository by typing
 ```
 mvn clean install
-```xml
-and add a dependency to your project's `pom.xml` like this
 ```
+and add a dependency to your project's `pom.xml` like this
+```xml
 <dependency>
 	<groupId>de.dfki.resc28</groupId>
   	<artifactId>flapjack</artifactId>
