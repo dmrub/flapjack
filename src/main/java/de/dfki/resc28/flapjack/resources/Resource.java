@@ -105,6 +105,8 @@ public abstract class Resource implements IResource
 			}
 		};
 
+                System.err.format("Resource.read: request URI: %s contentType: %s%n", fURI, contentType);
+
 		return Response.ok(out)
                         .header(HttpHeaders.VARY, HttpHeaders.ACCEPT)
 					   .type(contentType)
