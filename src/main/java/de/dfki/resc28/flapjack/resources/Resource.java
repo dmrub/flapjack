@@ -23,7 +23,7 @@ import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDFS;
 
 import de.dfki.resc28.igraphstore.IGraphStore;
-
+import javax.ws.rs.core.HttpHeaders;
 
 
 
@@ -104,12 +104,13 @@ public abstract class Resource implements IResource
 				RDFDataMgr.write(output, description, RDFDataMgr.determineLang(null, contentType, null)) ;
 			}
 		};
-		
+
 		return Response.ok(out)
+                        .header(HttpHeaders.VARY, HttpHeaders.ACCEPT)
 					   .type(contentType)
 					   .build();
 	}
-	
+
 	
 	// TODO: delete membershipTriples from parentContainer!
 	// TODO: if this is a container, delete all subResources!

@@ -73,11 +73,11 @@ public abstract class BaseService {
         IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
 
         if (r == null) {
-            return Response.status(Status.NOT_FOUND).build();
+            return Response.status(Status.NOT_FOUND).header(HttpHeaders.VARY, HttpHeaders.ACCEPT).build();
         } else if (!(r instanceof IResource)) {
-            return Response.status(Status.BAD_REQUEST).build();
+            return Response.status(Status.BAD_REQUEST).header(HttpHeaders.VARY, HttpHeaders.ACCEPT).build();
         } else if (!(r.getAllowedMethods().contains(HttpMethod.GET))) {
-            return Response.status(Status.METHOD_NOT_ALLOWED).build();
+            return Response.status(Status.METHOD_NOT_ALLOWED).header(HttpHeaders.VARY, HttpHeaders.ACCEPT).build();
         }
 
         return r.read(acceptType);
@@ -115,7 +115,7 @@ public abstract class BaseService {
         IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
 
         if (r == null) {
-            return Response.status(Status.NOT_FOUND).build();
+            return Response.status(Status.NOT_FOUND).header(HttpHeaders.VARY, HttpHeaders.ACCEPT).build();
         }
 
         try {
@@ -138,7 +138,7 @@ public abstract class BaseService {
             InputStream in = response.getEntity().getContent();
             StringWriter writer = new StringWriter();
             IOUtils.copy(in, writer, "UTF-8");
-            return Response.ok(writer.toString()).type("image/svg+xml").build();
+            return Response.ok(writer.toString()).header(HttpHeaders.VARY, HttpHeaders.ACCEPT).type("image/svg+xml").build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
