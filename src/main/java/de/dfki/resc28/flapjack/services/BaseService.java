@@ -42,6 +42,8 @@ import de.dfki.resc28.flapjack.resources.IResource;
 import de.dfki.resc28.flapjack.resources.IResourceManager;
 import de.dfki.resc28.igraphstore.Constants;
 import de.dfki.resc28.igraphstore.util.ProxyConfigurator;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Variant;
 
 /**
  * @author resc01
@@ -52,6 +54,24 @@ public abstract class BaseService {
     private String rhizomikUri;
     private String rhizomikShowGraphRuleUri;
     private String rhizomikRenderUri;
+
+    public static final List<Variant> DEFAULT_RDF_MEDIA_TYPE
+            = Variant.mediaTypes(
+                    MediaType.valueOf(Constants.CT_TEXT_TURTLE)
+            ).build();
+    public static final List<Variant> RDF_MEDIA_TYPES
+            = Variant.mediaTypes(
+                    MediaType.valueOf(Constants.CT_APPLICATION_JSON_LD),
+                    MediaType.valueOf(Constants.CT_APPLICATION_NQUADS),
+                    MediaType.valueOf(Constants.CT_APPLICATION_NTRIPLES),
+                    MediaType.valueOf(Constants.CT_APPLICATION_RDF_JSON),
+                    MediaType.valueOf(Constants.CT_APPLICATION_RDFXML),
+                    MediaType.valueOf(Constants.CT_APPLICATION_TRIX),
+                    MediaType.valueOf(Constants.CT_APPLICATION_XTURTLE),
+                    MediaType.valueOf(Constants.CT_TEXT_N3),
+                    MediaType.valueOf(Constants.CT_TEXT_TRIG),
+                    MediaType.valueOf(Constants.CT_TEXT_TURTLE)
+            ).build();
 
     public BaseService() {
         this(System.getProperty("rhizomikURI", "http://rhizomik.net"));
@@ -66,11 +86,30 @@ public abstract class BaseService {
         this.rhizomikShowGraphRuleUri = rhizomikShowGraphRuleUri;
     }
 
+    protected MediaType negotiateRDFMediaType() {
+        // Check default RDF type
+        Variant bestVariant = fRequest.selectVariant(DEFAULT_RDF_MEDIA_TYPE);
+        // Check all supported RDF types
+        if (bestVariant == null) {
+            bestVariant = fRequest.selectVariant(RDF_MEDIA_TYPES);
+            if (bestVariant == null) {
+                /* Based on results, the optimal response variant can not be
+                   determined from the list given.  */
+                return null;
+            }
+        }
+        return bestVariant.getMediaType();
+    }
+
     @GET
-    @Produces({Constants.CT_APPLICATION_JSON_LD, Constants.CT_APPLICATION_NQUADS, Constants.CT_APPLICATION_NTRIPLES, Constants.CT_APPLICATION_RDF_JSON, Constants.CT_APPLICATION_RDFXML, Constants.CT_APPLICATION_TRIX, Constants.CT_APPLICATION_XTURTLE, Constants.CT_TEXT_N3, Constants.CT_TEXT_TRIG, Constants.CT_TEXT_TURTLE})
+    @Produces({Constants.CT_APPLICATION_JSON_LD, Constants.CT_APPLICATION_NQUADS,
+        Constants.CT_APPLICATION_NTRIPLES, Constants.CT_APPLICATION_RDF_JSON,
+        Constants.CT_APPLICATION_RDFXML, Constants.CT_APPLICATION_TRIX,
+        Constants.CT_APPLICATION_XTURTLE, Constants.CT_TEXT_N3,
+        Constants.CT_TEXT_TRIG, Constants.CT_TEXT_TURTLE})
     public Response get(@HeaderParam(HttpHeaders.ACCEPT) @DefaultValue(Constants.CT_TEXT_TURTLE) String acceptType) {
         System.err.format("BaseService.get: request URI: %s%n", fRequestUrl.getRequestUri());
-        IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
+        IResource r = getResourceManager().get(getResourceURI(fRequestUrl));
 
         if (r == null) {
             return Response.status(Status.NOT_FOUND).header(HttpHeaders.VARY, HttpHeaders.ACCEPT).build();
@@ -80,31 +119,35 @@ public abstract class BaseService {
             return Response.status(Status.METHOD_NOT_ALLOWED).header(HttpHeaders.VARY, HttpHeaders.ACCEPT).build();
         }
 
-        return r.read(acceptType);
+        final MediaType responseMediaType = negotiateRDFMediaType();
+        if (responseMediaType == null) {
+            return Response.notAcceptable(RDF_MEDIA_TYPES).build();
+        }
+        return r.read(responseMediaType.getType() + "/" + responseMediaType.getSubtype());
     }
 
 //	@GET
-//	@Produces(MediaType.TEXT_HTML) 
+//	@Produces(MediaType.TEXT_HTML)
 //	public Response getText()
 //	{
 //		// TODO: refactor!
-//		IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
-//		
+//		IResource r = getResourceManager().get(getResourceURI(fRequestUrl));
+//
 //		if (r == null)
 //		{
 //			return Response.status(Status.NOT_FOUND).build();
 //		}
-//		
+//
 //		final Model result = r.getModel();
-//		
-//		StreamingOutput out = new StreamingOutput() 
+//
+//		StreamingOutput out = new StreamingOutput()
 //		{
 //			public void write(OutputStream output) throws IOException, WebApplicationException
 //			{
 //				RDFDataMgr.write(output, result, RDFDataMgr.determineLang(null, "text/turtle", null)) ;
 //			}
 //		};
-//		
+//
 //		return Response.ok(out)
 //					   .type(MediaType.TEXT_HTML)
 //					   .build();
@@ -112,7 +155,7 @@ public abstract class BaseService {
     @GET
     @Produces({MediaType.TEXT_HTML, Constants.CT_IMAGE_SVG_XML})
     public Response getSVG() {
-        IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
+        IResource r = getResourceManager().get(getResourceURI(fRequestUrl));
 
         if (r == null) {
             return Response.status(Status.NOT_FOUND).header(HttpHeaders.VARY, HttpHeaders.ACCEPT).build();
@@ -120,14 +163,14 @@ public abstract class BaseService {
 
         try {
             String syntax = "RDF/XML";
-            StringWriter out = new StringWriter();
-            r.getModel().write(out, syntax);
-
-            List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
-            urlParameters.add(new BasicNameValuePair("rules", rhizomikShowGraphRuleUri));
-            urlParameters.add(new BasicNameValuePair("format", "RDF/XML"));
-            urlParameters.add(new BasicNameValuePair("rdf", out.toString()));
-            out.close();
+            List<NameValuePair> urlParameters;
+            try (StringWriter out = new StringWriter()) {
+                r.getModel().write(out, syntax);
+                urlParameters = new ArrayList<>();
+                urlParameters.add(new BasicNameValuePair("rules", rhizomikShowGraphRuleUri));
+                urlParameters.add(new BasicNameValuePair("format", "RDF/XML"));
+                urlParameters.add(new BasicNameValuePair("rdf", out.toString()));
+            }
 
             CloseableHttpClient client = ProxyConfigurator.createHttpClient();
             HttpPost httpPost = new HttpPost(rhizomikRenderUri);
@@ -146,7 +189,7 @@ public abstract class BaseService {
 
     @DELETE
     public Response delete() {
-        IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
+        IResource r = getResourceManager().get(getResourceURI(fRequestUrl));
 
         if (r == null) {
             return Response.status(Status.NOT_FOUND).build();
@@ -162,7 +205,7 @@ public abstract class BaseService {
     @PUT
     @Consumes({Constants.CT_APPLICATION_JSON_LD, Constants.CT_APPLICATION_NQUADS, Constants.CT_APPLICATION_NTRIPLES, Constants.CT_APPLICATION_RDF_JSON, Constants.CT_APPLICATION_RDFXML, Constants.CT_APPLICATION_TRIX, Constants.CT_APPLICATION_XTURTLE, Constants.CT_TEXT_N3, Constants.CT_TEXT_TRIG, Constants.CT_TEXT_TURTLE})
     public Response put(InputStream content, @HeaderParam(HttpHeaders.CONTENT_TYPE) String contentType) {
-        IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
+        IResource r = getResourceManager().get(getResourceURI(fRequestUrl));
 
         if (r == null) {
             return Response.status(Status.NOT_FOUND).build();
@@ -178,7 +221,7 @@ public abstract class BaseService {
     @POST
     @Consumes({Constants.CT_APPLICATION_JSON_LD, Constants.CT_APPLICATION_NQUADS, Constants.CT_APPLICATION_NTRIPLES, Constants.CT_APPLICATION_RDF_JSON, Constants.CT_APPLICATION_RDFXML, Constants.CT_APPLICATION_TRIX, Constants.CT_APPLICATION_XTURTLE, Constants.CT_TEXT_N3, Constants.CT_TEXT_TRIG, Constants.CT_TEXT_TURTLE})
     public Response post(InputStream content, @HeaderParam(HttpHeaders.CONTENT_TYPE) String contentType) {
-        IResource r = getResourceManager().get(getCanonicalURL(fRequestUrl.getRequestUri()));
+        IResource r = getResourceManager().get(getResourceURI(fRequestUrl));
 
         if (r == null) {
             return Response.status(Status.NOT_FOUND).build();
@@ -196,18 +239,34 @@ public abstract class BaseService {
 
     protected abstract IContainer getRootContainer();
 
-    protected String getCanonicalURL(URI url) {
-        if (url.toString().endsWith("/")) {
-            return url.toString().substring(0, url.toString().length() - 1);
-        }
+    /**
+     * Maps UriInfo to resource URI
+     *
+     * @param uriInfo UriInfo structure of the HTTP request
+     * @return resource URI as string
+     */
+    protected String getResourceURI(UriInfo uriInfo) {
+        return getCanonicalURL(uriInfo.getRequestUri());
+    }
 
-        return url.toString();
+    protected String getCanonicalURL(String url) {
+        if (url.endsWith("/")) {
+            return url.substring(0, url.length() - 1);
+        }
+        return url;
+    }
+
+    protected String getCanonicalURL(URI url) {
+        return getCanonicalURL(url.toString());
     }
 
     @Context
-    HttpServletRequest fRequest;
+    protected Request fRequest;
+
     @Context
-    protected ServletContext fContext;
+    HttpServletRequest fServletRequest;
+    @Context
+    protected ServletContext fServletContext;
     @Context
     protected HttpHeaders fRequestHeaders;
     @Context

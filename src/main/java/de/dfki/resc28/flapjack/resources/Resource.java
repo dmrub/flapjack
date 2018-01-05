@@ -49,7 +49,7 @@ public abstract class Resource implements IResource
 	/**
 	 * 
 	 * @param resourceURI
-	 * @param model
+	 * @param graphStore
 	 */
 	public Resource(String resourceURI, IGraphStore graphStore)
 	{
